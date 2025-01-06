@@ -7176,7 +7176,7 @@ class STAR(HamiltonLiquidHandler):
 
   # -------------- Extra - Probing labware with STAR - making STAR into a CMM --------------
 
-  y_drive_mm_per_increment= 0.046302082
+  y_drive_mm_per_increment = 0.046302082
   z_drive_mm_per_increment = 0.01072765
 
   @staticmethod
@@ -7194,7 +7194,6 @@ class STAR(HamiltonLiquidHandler):
   @staticmethod
   def z_drive_increment_to_mm(value_increments: int) -> float:
     return round(value_increments * STAR.z_drive_mm_per_increment, 2)
-
 
   async def clld_probe_z_height_using_channel(
     self,
@@ -7294,7 +7293,6 @@ class STAR(HamiltonLiquidHandler):
 
     return result_in_mm
 
-
   async def clld_probe_y_position_using_channel(
     self,
     channel_idx: int,  # 0-based indexing of channels!
@@ -7306,110 +7304,111 @@ class STAR(HamiltonLiquidHandler):
     detection_edge: int = 10,
     current_limit_int: Literal[1, 2, 3, 4, 5, 6, 7] = 7,
     post_detection_dist: float = 2.0,  # mm
-    ) -> float:
+  ) -> float:
     """
-    Probes the y-position at which a conductive material is detected using 
+    Probes the y-position at which a conductive material is detected using
     the channel's capacitive Liquid Level Detection (cLLD) capability.
 
     This method aims to provide safe probing within defined boundaries to
-    avoid collisions or damage to the system. It is specifically designed 
+    avoid collisions or damage to the system. It is specifically designed
     for conductive materials.
 
     Args:
         channel_idx (int): Index of the channel to use for probing (0-based).
             The backmost channel is 0.
-        probing_direction (Literal["forward", "backward"]): Direction to move 
-            the channel during probing. "forward" increases y-position, 
+        probing_direction (Literal["forward", "backward"]): Direction to move
+            the channel during probing. "forward" increases y-position,
             "backward" decreases y-position.
-        start_pos_search (float, optional): Initial y-position for the search 
+        start_pos_search (float, optional): Initial y-position for the search
             (in mm). Defaults to the current y-position of the channel.
-        end_pos_search (float, optional): Final y-position for the search (in mm). 
+        end_pos_search (float, optional): Final y-position for the search (in mm).
             Defaults to the maximum y-position the channel can move to safely.
-        channel_speed (float): Speed of the channel's movement (in mm/sec). 
+        channel_speed (float): Speed of the channel's movement (in mm/sec).
             Defaults to 10.0 mm/sec (i.e. slow default for safety).
-        channel_acceleration_int (Literal[1, 2, 3, 4]): Acceleration level, 
+        channel_acceleration_int (Literal[1, 2, 3, 4]): Acceleration level,
             corresponding to 1–4 (* 5,000 steps/sec²). Defaults to 4.
         detection_edge (int): Steepness of the edge for capacitive detection.
             Must be between 0 and 1023. Defaults to 10.
-        current_limit_int (Literal[1, 2, 3, 4, 5, 6, 7]): Current limit level, 
+        current_limit_int (Literal[1, 2, 3, 4, 5, 6, 7]): Current limit level,
             from 1 to 7. Defaults to 7.
-        post_detection_dist (float): Distance to move away from the detected 
+        post_detection_dist (float): Distance to move away from the detected
             material after detection (in mm). Defaults to 2.0 mm.
 
     Returns:
         float: The detected y-position of the conductive material (in mm).
 
     Raises:
-        ValueError: 
+        ValueError:
             - If the probing direction is invalid.
             - If the specified start or end positions are outside the safe range.
             - If no conductive material is detected during the probing process.
     """
 
-    assert probing_direction in ["forward", "backward"], (
-      f"Probing direction must be either 'forward' or 'backward', is {probing_direction}."
-    )
+    assert probing_direction in [
+      "forward",
+      "backward",
+    ], f"Probing direction must be either 'forward' or 'backward', is {probing_direction}."
 
     # Anti-channel-crash feature
     if channel_idx > 0:
-        channel_idx_minus_one_y_pos = await self.request_y_pos_channel_n(channel_idx-1)
+      channel_idx_minus_one_y_pos = await self.request_y_pos_channel_n(channel_idx - 1)
     else:
-        channel_idx_minus_one_y_pos = STAR.y_drive_increment_to_mm(15_000)
-    if channel_idx < (self.num_channels-1):
-        channel_idx_plus_one_y_pos = await self.request_y_pos_channel_n(channel_idx+1)
+      channel_idx_minus_one_y_pos = STAR.y_drive_increment_to_mm(15_000)
+    if channel_idx < (self.num_channels - 1):
+      channel_idx_plus_one_y_pos = await self.request_y_pos_channel_n(channel_idx + 1)
     else:
-        channel_idx_plus_one_y_pos = 6
-        # Insight: STAR machines appear to lose connection to a channel below y-position=6 mm
-    
+      channel_idx_plus_one_y_pos = 6
+      # Insight: STAR machines appear to lose connection to a channel below y-position=6 mm
+
     max_safe_upper_y_pos = channel_idx_minus_one_y_pos - 9
     max_safe_lower_y_pos = channel_idx_plus_one_y_pos + 9 if channel_idx_plus_one_y_pos != 0 else 6
-    
+
     # Enable safe start and end positions
     if start_pos_search:
-        assert max_safe_lower_y_pos <= start_pos_search <= max_safe_upper_y_pos, (
-          f"Start position for y search must be between \n{max_safe_lower_y_pos} and"
-          + f"{max_safe_upper_y_pos} mm, is {end_pos_search} mm. Otherwise channel will crash."
-        )
-        await self.move_channel_y(y=start_pos_search, channel=channel_idx)
+      assert max_safe_lower_y_pos <= start_pos_search <= max_safe_upper_y_pos, (
+        f"Start position for y search must be between \n{max_safe_lower_y_pos} and"
+        + f"{max_safe_upper_y_pos} mm, is {end_pos_search} mm. Otherwise channel will crash."
+      )
+      await self.move_channel_y(y=start_pos_search, channel=channel_idx)
 
     if end_pos_search:
-        assert max_safe_lower_y_pos <= end_pos_search <= max_safe_upper_y_pos, (
-          f"End position for y search must be between \n{max_safe_lower_y_pos} and"
-          + f"{max_safe_upper_y_pos} mm, is {end_pos_search} mm. Otherwise channel will crash."
-        )
-    
+      assert max_safe_lower_y_pos <= end_pos_search <= max_safe_upper_y_pos, (
+        f"End position for y search must be between \n{max_safe_lower_y_pos} and"
+        + f"{max_safe_upper_y_pos} mm, is {end_pos_search} mm. Otherwise channel will crash."
+      )
+
     current_channel_y_pos = await self.request_y_pos_channel_n(channel_idx)
 
     # Set safe y-search end position based on the probing direction
     if probing_direction == "forward":
-        max_y_search_pos = end_pos_search or max_safe_upper_y_pos
-        if max_y_search_pos < current_channel_y_pos:
-            raise ValueError(
-                f"Channel {channel_idx} cannot move forwards: "
-                f"End position = {max_y_search_pos} < current position = {current_channel_y_pos}"
-                f"\nDid you mean to move backwards?"
-            )
+      max_y_search_pos = end_pos_search or max_safe_upper_y_pos
+      if max_y_search_pos < current_channel_y_pos:
+        raise ValueError(
+          f"Channel {channel_idx} cannot move forwards: "
+          f"End position = {max_y_search_pos} < current position = {current_channel_y_pos}"
+          f"\nDid you mean to move backwards?"
+        )
     else:  # probing_direction == "backwards"
-        max_y_search_pos = end_pos_search or max_safe_lower_y_pos
-        if max_y_search_pos > current_channel_y_pos:
-            raise ValueError(
-                f"Channel {channel_idx} cannot move backwards: "
-                f"End position = {max_y_search_pos} > current position = {current_channel_y_pos}"
-                f"\nDid you mean to move forwards?"
-            )
+      max_y_search_pos = end_pos_search or max_safe_lower_y_pos
+      if max_y_search_pos > current_channel_y_pos:
+        raise ValueError(
+          f"Channel {channel_idx} cannot move backwards: "
+          f"End position = {max_y_search_pos} > current position = {current_channel_y_pos}"
+          f"\nDid you mean to move forwards?"
+        )
 
     # Convert mm to increments
     max_y_search_pos_increments = STAR.mm_to_y_drive_increment(max_y_search_pos)
     channel_speed_increments = STAR.mm_to_y_drive_increment(channel_speed)
-    
+
     # Machine-compatability check of calculated parameters
     assert 0 <= max_y_search_pos_increments <= 15_000, (
       f"Maximum y search position must be between \n0 and"
-      + f"{STAR.y_drive_increment_to_mm(15_000)} mm, is {max_y_search_pos_increments} mm" # STAR
+      + f"{STAR.y_drive_increment_to_mm(15_000)} mm, is {max_y_search_pos_increments} mm"  # STAR
     )
     assert 20 <= channel_speed_increments <= 8_000, (
-      f"LLD search speed must be between \n{STAR.y_drive_increment_to_mm(20)}" # STAR
-      + f"and {STAR.y_drive_increment_to_mm(8_000)} mm/sec, is {channel_speed} mm/sec" # STAR
+      f"LLD search speed must be between \n{STAR.y_drive_increment_to_mm(20)}"  # STAR
+      + f"and {STAR.y_drive_increment_to_mm(8_000)} mm/sec, is {channel_speed} mm/sec"  # STAR
     )
     assert channel_acceleration_int in [1, 2, 3, 4], (
       f"Channel speed must be in [1, 2, 3, 4] (* 5_000 steps/sec**2)"
@@ -7430,42 +7429,45 @@ class STAR(HamiltonLiquidHandler):
 
     # Move channel for cLLD (Note: does not return detected y-position!)
     await self.send_command(
-        module=f"P{channel_idx+1}",
-        command="YL",
-        ya=max_y_search_pos_str, # Maximum search position [steps]
-        gt= detection_edge_str, # Edge steepness at capacitive LLD detection
-        gl= f"{0:04}", # Offset after edge detection -> always 0 to measure y-pos!
-        yv=channel_speed_str, # Max speed [steps/second]
-        yr=channel_acceleration_str, # Acceleration ramp [yr * 5_000 steps/second**2]
-        yw=current_limit_str, # Current limit
-        )
+      module=f"P{channel_idx+1}",
+      command="YL",
+      ya=max_y_search_pos_str,  # Maximum search position [steps]
+      gt=detection_edge_str,  # Edge steepness at capacitive LLD detection
+      gl=f"{0:04}",  # Offset after edge detection -> always 0 to measure y-pos!
+      yv=channel_speed_str,  # Max speed [steps/second]
+      yr=channel_acceleration_str,  # Acceleration ramp [yr * 5_000 steps/second**2]
+      yw=current_limit_str,  # Current limit
+    )
 
     detected_material_y_pos = await self.request_y_pos_channel_n(channel_idx)
 
     # Dynamically evaluate post-detection distance to avoid crashes
     if probing_direction == "forward":
-        if channel_idx == self.num_channels - 1: # safe default
-            adjacent_y_pos = 6
-        else: # next channel
-            adjacent_y_pos = await self.request_y_pos_channel_n(channel_idx + 1)
-        
-        max_safe_y_mov_dist_post_detection = detected_material_y_pos - adjacent_y_pos - 9
-        move_target = detected_material_y_pos - min(post_detection_dist, max_safe_y_mov_dist_post_detection)
-    
+      if channel_idx == self.num_channels - 1:  # safe default
+        adjacent_y_pos = 6
+      else:  # next channel
+        adjacent_y_pos = await self.request_y_pos_channel_n(channel_idx + 1)
+
+      max_safe_y_mov_dist_post_detection = detected_material_y_pos - adjacent_y_pos - 9
+      move_target = detected_material_y_pos - min(
+        post_detection_dist, max_safe_y_mov_dist_post_detection
+      )
+
     else:  # probing_direction == "backwards"
-        if channel_idx == 0: # safe default
-            adjacent_y_pos = STAR.y_drive_increment_to_mm(15_000)
-        else: #  previous channel
-            adjacent_y_pos = await self.request_y_pos_channel_n(channel_idx - 1)
-        
-        max_safe_y_mov_dist_post_detection = adjacent_y_pos - detected_material_y_pos - 9
-        move_target = detected_material_y_pos + min(post_detection_dist, max_safe_y_mov_dist_post_detection)
-    
+      if channel_idx == 0:  # safe default
+        adjacent_y_pos = STAR.y_drive_increment_to_mm(15_000)
+      else:  #  previous channel
+        adjacent_y_pos = await self.request_y_pos_channel_n(channel_idx - 1)
+
+      max_safe_y_mov_dist_post_detection = adjacent_y_pos - detected_material_y_pos - 9
+      move_target = detected_material_y_pos + min(
+        post_detection_dist, max_safe_y_mov_dist_post_detection
+      )
+
     await self.move_channel_y(y=move_target, channel=channel_idx)
 
     return detected_material_y_pos
 
- 
   async def request_tip_len_on_channel(
     self,
     channel_idx: int,  # 0-based indexing of channels!
