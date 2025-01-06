@@ -7403,7 +7403,7 @@ class STAR(HamiltonLiquidHandler):
 
     # Machine-compatability check of calculated parameters
     assert 0 <= max_y_search_pos_increments <= 15_000, (
-      f"Maximum y search position must be between \n0 and"
+      "Maximum y search position must be between \n0 and"
       + f"{STAR.y_drive_increment_to_mm(15_000)} mm, is {max_y_search_pos_increments} mm"  # STAR
     )
     assert 20 <= channel_speed_increments <= 8_000, (
@@ -7411,7 +7411,7 @@ class STAR(HamiltonLiquidHandler):
       + f"and {STAR.y_drive_increment_to_mm(8_000)} mm/sec, is {channel_speed} mm/sec"  # STAR
     )
     assert channel_acceleration_int in [1, 2, 3, 4], (
-      f"Channel speed must be in [1, 2, 3, 4] (* 5_000 steps/sec**2)"
+      "Channel speed must be in [1, 2, 3, 4] (* 5_000 steps/sec**2)"
       + f", is {channel_speed} mm/sec"
     )
     assert (
@@ -7444,11 +7444,11 @@ class STAR(HamiltonLiquidHandler):
     # Dynamically evaluate post-detection distance to avoid crashes
     if probing_direction == "forward":
       if channel_idx == self.num_channels - 1:  # safe default
-        adjacent_y_pos = 6
+        adjacent_y_pos = 6.0
       else:  # next channel
         adjacent_y_pos = await self.request_y_pos_channel_n(channel_idx + 1)
 
-      max_safe_y_mov_dist_post_detection = detected_material_y_pos - adjacent_y_pos - 9
+      max_safe_y_mov_dist_post_detection = detected_material_y_pos - adjacent_y_pos - 9.0
       move_target = detected_material_y_pos - min(
         post_detection_dist, max_safe_y_mov_dist_post_detection
       )
@@ -7459,7 +7459,7 @@ class STAR(HamiltonLiquidHandler):
       else:  #  previous channel
         adjacent_y_pos = await self.request_y_pos_channel_n(channel_idx - 1)
 
-      max_safe_y_mov_dist_post_detection = adjacent_y_pos - detected_material_y_pos - 9
+      max_safe_y_mov_dist_post_detection = adjacent_y_pos - detected_material_y_pos - 9.0
       move_target = detected_material_y_pos + min(
         post_detection_dist, max_safe_y_mov_dist_post_detection
       )
