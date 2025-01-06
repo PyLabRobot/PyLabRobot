@@ -7417,9 +7417,15 @@ class STAR(HamiltonLiquidHandler):
     assert (
       0 <= detection_edge <= 1_0234
     ), "Edge steepness at capacitive LLD detection must be between 0 and 1023"
-    assert current_limit_int in [1, 2, 3, 4, 5, 6, 7], (
-      f"Currrent limit must be any([1, 2, 3, 4], 5, 6, 7), is {channel_speed} mm/sec"
-    )
+    assert current_limit_int in [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+    ], f"Currrent limit must be in [1, 2, 3, 4, 5, 6, 7], is {channel_speed} mm/sec"
 
     max_y_search_pos_str = f"{max_y_search_pos_increments:05}"
     channel_speed_str = f"{channel_speed_increments:04}"
