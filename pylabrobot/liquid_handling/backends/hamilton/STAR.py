@@ -7176,15 +7176,25 @@ class STAR(HamiltonLiquidHandler):
 
   # -------------- Extra - Probing labware with STAR - making STAR into a CMM --------------
 
+  y_drive_mm_per_increment= 0.046302082
   z_drive_mm_per_increment = 0.01072765
+
+  @staticmethod
+  def mm_to_y_drive_increment(value_mm: float) -> int:
+    return round(value_mm / STAR.y_drive_mm_per_increment)
+
+  @staticmethod
+  def y_drive_increment_to_mm(value_mm: int) -> float:
+    return round(value_mm * STAR.y_drive_mm_per_increment, 2)
 
   @staticmethod
   def mm_to_z_drive_increment(value_mm: float) -> int:
     return round(value_mm / STAR.z_drive_mm_per_increment)
 
   @staticmethod
-  def z_drive_increment_to_mm(value_mm: int) -> float:
-    return round(value_mm * STAR.z_drive_mm_per_increment, 2)
+  def z_drive_increment_to_mm(value_increments: int) -> float:
+    return round(value_increments * STAR.z_drive_mm_per_increment, 2)
+
 
   async def clld_probe_z_height_using_channel(
     self,
@@ -7206,7 +7216,7 @@ class STAR(HamiltonLiquidHandler):
     Args:
       channel_idx: The index of the channel to use for probing. Backmost channel = 0.
       lowest_immers_pos: The lowest immersion position in mm.
-      start_pos_lld_search: The start position for z-touch search in mm.
+      start_pos_lld_search: The start position for clld search in mm.
       channel_speed: The speed of channel movement in mm/sec.
       channel_acceleration: The acceleration of the channel in mm/sec**2.
       detection_edge: The edge steepness at capacitive LLD detection.
