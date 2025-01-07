@@ -7328,7 +7328,7 @@ class STAR(HamiltonLiquidHandler):
         channel_acceleration_int (Literal[1, 2, 3, 4]): Acceleration level,
             corresponding to 1–4 (* 5,000 steps/sec²). Defaults to 4.
         detection_edge (int): Steepness of the edge for capacitive detection.
-            Must be between 0 and 1023. Defaults to 10.
+            Must be between 0 and 1024. Defaults to 10.
         current_limit_int (Literal[1, 2, 3, 4, 5, 6, 7]): Current limit level,
             from 1 to 7. Defaults to 7.
         post_detection_dist (float): Distance to move away from the detected
@@ -7353,7 +7353,7 @@ class STAR(HamiltonLiquidHandler):
     if channel_idx > 0:
       channel_idx_minus_one_y_pos = await self.request_y_pos_channel_n(channel_idx - 1)
     else:
-      channel_idx_minus_one_y_pos = STAR.y_drive_increment_to_mm(15_000)
+      channel_idx_minus_one_y_pos = STAR.y_drive_increment_to_mm(13_714) + 9 # y-position=635 mm
     if channel_idx < (self.num_channels - 1):
       channel_idx_plus_one_y_pos = await self.request_y_pos_channel_n(channel_idx + 1)
     else:
@@ -7366,14 +7366,14 @@ class STAR(HamiltonLiquidHandler):
     # Enable safe start and end positions
     if start_pos_search:
       assert max_safe_lower_y_pos <= start_pos_search <= max_safe_upper_y_pos, (
-        f"Start position for y search must be between \n{max_safe_lower_y_pos} and"
+        f"Start position for y search must be between \n{max_safe_lower_y_pos} and "
         + f"{max_safe_upper_y_pos} mm, is {end_pos_search} mm. Otherwise channel will crash."
       )
       await self.move_channel_y(y=start_pos_search, channel=channel_idx)
 
     if end_pos_search:
       assert max_safe_lower_y_pos <= end_pos_search <= max_safe_upper_y_pos, (
-        f"End position for y search must be between \n{max_safe_lower_y_pos} and"
+        f"End position for y search must be between \n{max_safe_lower_y_pos} and "
         + f"{max_safe_upper_y_pos} mm, is {end_pos_search} mm. Otherwise channel will crash."
       )
 
@@ -7402,13 +7402,13 @@ class STAR(HamiltonLiquidHandler):
     channel_speed_increments = STAR.mm_to_y_drive_increment(channel_speed)
 
     # Machine-compatability check of calculated parameters
-    assert 0 <= max_y_search_pos_increments <= 15_000, (
+    assert 0 <= max_y_search_pos_increments <= 13_714, (
       "Maximum y search position must be between \n0 and"
-      + f"{STAR.y_drive_increment_to_mm(15_000)} mm, is {max_y_search_pos_increments} mm"  # STAR
+      + f"{STAR.y_drive_increment_to_mm(13_714)+9} mm, is {max_y_search_pos_increments} mm"
     )
     assert 20 <= channel_speed_increments <= 8_000, (
-      f"LLD search speed must be between \n{STAR.y_drive_increment_to_mm(20)}"  # STAR
-      + f"and {STAR.y_drive_increment_to_mm(8_000)} mm/sec, is {channel_speed} mm/sec"  # STAR
+      f"LLD search speed must be between \n{STAR.y_drive_increment_to_mm(20)}"
+      + f"and {STAR.y_drive_increment_to_mm(8_000)} mm/sec, is {channel_speed} mm/sec"
     )
     assert channel_acceleration_int in [1, 2, 3, 4], (
       "Channel speed must be in [1, 2, 3, 4] (* 5_000 steps/sec**2)"
@@ -7461,7 +7461,7 @@ class STAR(HamiltonLiquidHandler):
 
     else:  # probing_direction == "backwards"
       if channel_idx == 0:  # safe default
-        adjacent_y_pos = STAR.y_drive_increment_to_mm(15_000)
+        adjacent_y_pos = STAR.y_drive_increment_to_mm(13_714)+9 # y-position=635 mm
       else:  #  previous channel
         adjacent_y_pos = await self.request_y_pos_channel_n(channel_idx - 1)
 
