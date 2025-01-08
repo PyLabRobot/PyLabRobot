@@ -7353,7 +7353,7 @@ class STAR(HamiltonLiquidHandler):
     if channel_idx > 0:
       channel_idx_minus_one_y_pos = await self.request_y_pos_channel_n(channel_idx - 1)
     else:
-      channel_idx_minus_one_y_pos = STAR.y_drive_increment_to_mm(13_714) + 9 # y-position=635 mm
+      channel_idx_minus_one_y_pos = STAR.y_drive_increment_to_mm(13_714) + 9  # y-position=635 mm
     if channel_idx < (self.num_channels - 1):
       channel_idx_plus_one_y_pos = await self.request_y_pos_channel_n(channel_idx + 1)
     else:
@@ -7461,7 +7461,7 @@ class STAR(HamiltonLiquidHandler):
 
     else:  # probing_direction == "backwards"
       if channel_idx == 0:  # safe default
-        adjacent_y_pos = STAR.y_drive_increment_to_mm(13_714)+9 # y-position=635 mm
+        adjacent_y_pos = STAR.y_drive_increment_to_mm(13_714) + 9  # y-position=635 mm
       else:  #  previous channel
         adjacent_y_pos = await self.request_y_pos_channel_n(channel_idx - 1)
 
