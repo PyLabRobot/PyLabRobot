@@ -2984,7 +2984,35 @@ class STAR(HamiltonLiquidHandler):
     await self.position_left_x_arm_(round(x * 10))
 
   async def move_channel_y(self, channel: int, y: float):
-    """Move a channel in the y direction."""
+    """Move a channel safely in the y direction."""
+
+    # Anti-channel-crash feature
+    if channel > 0:
+      max_y_pos = await self.request_y_pos_channel_n(channel - 1)
+      if y > max_y_pos:
+        raise ValueError(
+          f"channel {channel} y-target must be <= {max_y_pos} mm "
+          f"(channel {channel - 1} y-position is {round(y, 2)} mm)"
+        )
+    else:
+      # STAR machines appear to lose connection to a channel if y > 635 mm
+      max_y_pos = 635
+      if y > max_y_pos:
+        raise ValueError(f"channel {channel} y-target must be <= {max_y_pos} mm (machine limit)")
+
+    if channel < (self.num_channels - 1):
+      min_y_pos = await self.request_y_pos_channel_n(channel + 1)
+      if y < min_y_pos:
+        raise ValueError(
+          f"channel {channel} y-target must be >= {min_y_pos} mm "
+          f"(channel {channel + 1} y-position is {round(y, 2)} mm)"
+        )
+    else:
+      # STAR machines appear to lose connection to a channel if y < 6 mm
+      min_y_pos = 6
+      if y < min_y_pos:
+        raise ValueError(f"channel {channel} y-target must be >= {min_y_pos} mm (machine limit)")
+
     await self.position_single_pipetting_channel_in_y_direction(
       pipetting_channel_index=channel + 1, y_position=round(y * 10)
     )
