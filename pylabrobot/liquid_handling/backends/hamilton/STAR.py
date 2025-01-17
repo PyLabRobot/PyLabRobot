@@ -7413,8 +7413,8 @@ class STAR(HamiltonLiquidHandler):
     tip_len_to_tip_bottom_diameter_dict = {
       29.9: 0.8,  # 10 ul tip
       50.4: 0.7,  # 50 ul tip
-      59.9: 1.2, # teaching needle - BUT not 300 ul tip!
-      95.1: 1.2 # 1000 ul tip
+      59.9: 1.2,  # teaching needle - BUT not 300 ul tip!
+      95.1: 1.2,  # 1000 ul tip
     }
     tip_bottom_diameter = tip_len_to_tip_bottom_diameter_dict[tip_len]
 
