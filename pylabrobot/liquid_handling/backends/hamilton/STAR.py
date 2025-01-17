@@ -7221,6 +7221,7 @@ class STAR(HamiltonLiquidHandler):
   async def clld_probe_z_height_using_channel(
     self,
     channel_idx: int,  # 0-based indexing of channels!
+    tip_len: Optional[float] = None,  # mm
     lowest_immers_pos: float = 99.98,  # mm
     start_pos_search: float = 330.0,  # mm
     channel_speed: float = 10.0,  # mm
@@ -7320,6 +7321,7 @@ class STAR(HamiltonLiquidHandler):
     self,
     channel_idx: int,  # 0-based indexing of channels!
     probing_direction: Literal["forward", "backward"],
+    tip_len: Optional[float] = None,  # mm
     start_pos_search: Optional[float] = None,  # mm
     end_pos_search: Optional[float] = None,  # mm
     channel_speed: float = 10.0,  # mm/sec
@@ -7401,6 +7403,18 @@ class STAR(HamiltonLiquidHandler):
       )
 
     current_channel_y_pos = await self.request_y_pos_channel_n(channel_idx)
+    current_channel_z_pos = await self.request_z_pos_channel_n(channel_idx)
+    if tip_len is None:
+      tip_len = await self.request_tip_len_on_channel(channel_idx=channel_idx)
+      await self.move_channel_z(z=current_channel_z_pos, channel=channel_idx)
+
+    tip_len_to_tip_bottom_diameter_dict = {
+      29.9: 0.8,  # 10 ul tip
+      50.4: 0.7,  # 50 ul tip
+      59.9: 1.2, # teaching needle - BUT not 300 ul tip!
+      95.1: 1.2 # 1000 ul tip
+    }
+    tip_bottom_diameter = tip_len_to_tip_bottom_diameter_dict[tip_len]
 
     # Set safe y-search end position based on the probing direction
     if probing_direction == "forward":
@@ -7495,7 +7509,13 @@ class STAR(HamiltonLiquidHandler):
 
     await self.move_channel_y(y=move_target, channel=channel_idx)
 
-    return detected_material_y_pos
+    # Correct for tip_bottom_diameter
+    if probing_direction == "forward":
+      material_y_pos = detected_material_y_pos + tip_bottom_diameter / 2
+    else:
+      material_y_pos = detected_material_y_pos - tip_bottom_diameter / 2
+
+    return material_y_pos
 
   async def request_tip_len_on_channel(
     self,
