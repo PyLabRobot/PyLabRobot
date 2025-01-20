@@ -7322,7 +7322,6 @@ class STAR(HamiltonLiquidHandler):
     self,
     channel_idx: int,  # 0-based indexing of channels!
     probing_direction: Literal["forward", "backward"],
-    tip_len: Optional[float] = None,  # mm
     start_pos_search: Optional[float] = None,  # mm
     end_pos_search: Optional[float] = None,  # mm
     channel_speed: float = 10.0,  # mm/sec
@@ -7402,21 +7401,20 @@ class STAR(HamiltonLiquidHandler):
         + f"{max_safe_upper_y_pos} mm, is {end_pos_search} mm. Otherwise channel will crash."
       )
 
-    current_channel_y_pos = await self.request_y_pos_channel_n(channel_idx)
-    current_channel_z_pos = await self.request_z_pos_channel_n(channel_idx)
-    if tip_len is None:
-      tip_len = await self.request_tip_len_on_channel(channel_idx=channel_idx)
-      await self.move_channel_z(z=current_channel_z_pos, channel=channel_idx)
-
-    tip_len_to_tip_bottom_diameter_dict = {
-      29.9: 0.8,  # 10 ul tip
-      50.4: 0.7,  # 50 ul tip
-      59.9: 1.2,  # teaching needle - BUT not 300 ul tip!
-      95.1: 1.2,  # 1000 ul tip
-    }
-    tip_bottom_diameter = tip_len_to_tip_bottom_diameter_dict[tip_len]
+    tip = self.head[channel_idx]
+    if not isinstance(tip, HamiltonTip):
+      raise TypeError(
+        f"Channel {channel_idx} does not have a HamiltonTip attached, "
+        f"found {type(tip)} instead."
+      )
+    if tip.tip_diameter_bottom is None:
+      raise ValueError(
+        f"Tip {tip.tip_name} on channel {channel_idx} does not have a bottom diameter set."
+      )
+    tip_bottom_diameter = tip.tip_diameter_bottom
 
     # Set safe y-search end position based on the probing direction
+    current_channel_y_pos = await self.request_y_pos_channel_n(channel_idx)
     if probing_direction == "forward":
       max_y_search_pos = end_pos_search or max_safe_upper_y_pos
       if max_y_search_pos < current_channel_y_pos:
@@ -7464,22 +7462,16 @@ class STAR(HamiltonLiquidHandler):
       7,
     ], f"Currrent limit must be in [1, 2, 3, 4, 5, 6, 7], is {channel_speed} mm/sec"
 
-    max_y_search_pos_str = f"{max_y_search_pos_increments:05}"
-    channel_speed_str = f"{channel_speed_increments:04}"
-    channel_acceleration_str = f"{channel_acceleration_int}"
-    detection_edge_str = f"{detection_edge:04}"
-    current_limit_str = f"{current_limit_int}"
-
     # Move channel for cLLD (Note: does not return detected y-position!)
     await self.send_command(
       module=f"P{channel_idx+1}",
       command="YL",
-      ya=max_y_search_pos_str,  # Maximum search position [steps]
-      gt=detection_edge_str,  # Edge steepness at capacitive LLD detection
+      ya=f"{max_y_search_pos_increments:05}",  # Maximum search position [steps]
+      gt=f"{detection_edge:04}",  # Edge steepness at capacitive LLD detection
       gl=f"{0:04}",  # Offset after edge detection -> always 0 to measure y-pos!
-      yv=channel_speed_str,  # Max speed [steps/second]
-      yr=channel_acceleration_str,  # Acceleration ramp [yr * 5_000 steps/second**2]
-      yw=current_limit_str,  # Current limit
+      yv=f"{channel_speed_increments:04}",  # Max speed [steps/second]
+      yr=f"{channel_acceleration_int}",  # Acceleration ramp [yr * 5_000 steps/second**2]
+      yw=f"{current_limit_int}",  # Current limit
     )
 
     detected_material_y_pos = await self.request_y_pos_channel_n(channel_idx)
@@ -7512,7 +7504,7 @@ class STAR(HamiltonLiquidHandler):
     # Correct for tip_bottom_diameter
     if probing_direction == "forward":
       material_y_pos = detected_material_y_pos + tip_bottom_diameter / 2
-    else:
+    else:  # probing_direction == "backwards"
       material_y_pos = detected_material_y_pos - tip_bottom_diameter / 2
 
     return material_y_pos

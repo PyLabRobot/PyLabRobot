@@ -46,12 +46,12 @@ class HamiltonTip(Tip):
     maximal_volume: float,
     tip_size: Union[TipSize, str],  # union for deserialization, will probably refactor
     pickup_method: Union[TipPickupMethod, str],  # union for deserialization, will probably refactor
-    tip_size_bottom: Optional[float],
+    tip_diameter_bottom: Optional[float],
   ):
     """Create a new Hamilton tip.
 
     Args:
-      tip_size_bottom: diameter of the tip at the bottom. None if not known.
+      tip_diameter_bottom: diameter of the tip at the bottom. None if not known.
     """
     if isinstance(tip_size, str):
       tip_size = TipSize[tip_size]
@@ -78,7 +78,7 @@ class HamiltonTip(Tip):
 
     self.pickup_method = pickup_method
     self.tip_size = tip_size
-    self.tip_size_bottom = tip_size_bottom
+    self.tip_diameter_bottom = tip_diameter_bottom
 
   def __repr__(self) -> str:
     return (
@@ -136,7 +136,7 @@ def standard_volume_tip_no_filter() -> HamiltonTip:
     maximal_volume=400,
     tip_size=TipSize.STANDARD_VOLUME,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=1.2,
+    tip_diameter_bottom=1.2,
   )
 
 
@@ -148,7 +148,7 @@ def standard_volume_tip_with_filter() -> HamiltonTip:
     maximal_volume=360,
     tip_size=TipSize.STANDARD_VOLUME,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=1.2,
+    tip_diameter_bottom=1.2,
   )
 
 
@@ -160,7 +160,7 @@ def slim_standard_volume_tip_with_filter() -> HamiltonTip:
     maximal_volume=360,
     tip_size=TipSize.HIGH_VOLUME,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=None,
+    tip_diameter_bottom=None,
   )
 
 
@@ -172,7 +172,7 @@ def low_volume_tip_no_filter() -> HamiltonTip:
     maximal_volume=15,
     tip_size=TipSize.LOW_VOLUME,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=0.8,
+    tip_diameter_bottom=0.8,
   )
 
 
@@ -184,7 +184,7 @@ def low_volume_tip_with_filter() -> HamiltonTip:
     maximal_volume=10,
     tip_size=TipSize.LOW_VOLUME,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=0.8,
+    tip_diameter_bottom=0.8,
   )
 
 
@@ -196,7 +196,7 @@ def high_volume_tip_no_filter() -> HamiltonTip:
     maximal_volume=1250,
     tip_size=TipSize.HIGH_VOLUME,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=1.2,
+    tip_diameter_bottom=1.2,
   )
 
 
@@ -208,7 +208,7 @@ def high_volume_tip_with_filter() -> HamiltonTip:
     maximal_volume=1065,
     tip_size=TipSize.HIGH_VOLUME,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=1.2,
+    tip_diameter_bottom=1.2,
   )
 
 
@@ -220,7 +220,7 @@ def wide_high_volume_tip_with_filter() -> HamiltonTip:
     maximal_volume=1065,
     tip_size=TipSize.HIGH_VOLUME,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=12,
+    tip_diameter_bottom=12,
   )
 
 
@@ -232,7 +232,7 @@ def ultrawide_high_volume_tip_with_filter() -> HamiltonTip:
     maximal_volume=1065,
     tip_size=TipSize.HIGH_VOLUME,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=32,
+    tip_diameter_bottom=32,
   )
 
 
@@ -244,7 +244,7 @@ def four_ml_tip_with_filter() -> HamiltonTip:
     maximal_volume=4367,
     tip_size=TipSize.XL,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=None,
+    tip_diameter_bottom=None,
   )
 
 
@@ -256,7 +256,7 @@ def five_ml_tip_with_filter() -> HamiltonTip:
     maximal_volume=5420,
     tip_size=TipSize.XL,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=None,
+    tip_diameter_bottom=None,
   )
 
 
@@ -273,7 +273,7 @@ def five_ml_tip() -> HamiltonTip:
     maximal_volume=5420,
     tip_size=TipSize.XL,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=None,
+    tip_diameter_bottom=None,
   )
 
 
@@ -285,7 +285,7 @@ def fifty_ul_tip_with_filter() -> HamiltonTip:
     maximal_volume=60,
     tip_size=TipSize.STANDARD_VOLUME,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=0.7,
+    tip_diameter_bottom=0.7,
   )
 
 
@@ -297,5 +297,5 @@ def fifty_ul_tip_no_filter() -> HamiltonTip:
     maximal_volume=65,
     tip_size=TipSize.STANDARD_VOLUME,
     pickup_method=TipPickupMethod.OUT_OF_RACK,
-    tip_size_bottom=0.7,
+    tip_diameter_bottom=0.7,
   )
