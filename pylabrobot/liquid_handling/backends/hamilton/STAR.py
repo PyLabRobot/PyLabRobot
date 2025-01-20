@@ -7332,42 +7332,41 @@ class STAR(HamiltonLiquidHandler):
     post_detection_dist: float = 2.0,  # mm
   ) -> float:
     """
-    Probes the y-position at which a conductive material is detected using
-    the channel's capacitive Liquid Level Detection (cLLD) capability.
+    Probes the y-position at which a conductive material is detected using the channel's capacitive
+    Liquid Level Detection (cLLD) capability.
 
-    This method aims to provide safe probing within defined boundaries to
-    avoid collisions or damage to the system. It is specifically designed
-    for conductive materials.
+    This method aims to provide safe probing within defined boundaries to avoid collisions or damage
+    to the system. It is specifically designed for conductive materials.
 
     Args:
-        channel_idx (int): Index of the channel to use for probing (0-based).
-            The backmost channel is 0.
-        probing_direction (Literal["forward", "backward"]): Direction to move
-            the channel during probing. "forward" increases y-position,
-            "backward" decreases y-position.
-        start_pos_search (float, optional): Initial y-position for the search
-            (in mm). Defaults to the current y-position of the channel.
-        end_pos_search (float, optional): Final y-position for the search (in mm).
-            Defaults to the maximum y-position the channel can move to safely.
-        channel_speed (float): Speed of the channel's movement (in mm/sec).
-            Defaults to 10.0 mm/sec (i.e. slow default for safety).
-        channel_acceleration_int (Literal[1, 2, 3, 4]): Acceleration level,
-            corresponding to 1–4 (* 5,000 steps/sec²). Defaults to 4.
-        detection_edge (int): Steepness of the edge for capacitive detection.
-            Must be between 0 and 1024. Defaults to 10.
-        current_limit_int (Literal[1, 2, 3, 4, 5, 6, 7]): Current limit level,
-            from 1 to 7. Defaults to 7.
-        post_detection_dist (float): Distance to move away from the detected
-            material after detection (in mm). Defaults to 2.0 mm.
+      channel_idx: Index of the channel to use for probing (0-based).
+        The backmost channel is 0.
+      probing_direction: Direction to move
+        the channel during probing. "forward" increases y-position,
+        "backward" decreases y-position.
+      start_pos_search: Initial y-position for the search
+        (in mm). Defaults to the current y-position of the channel.
+      end_pos_search: Final y-position for the search (in mm).
+        Defaults to the maximum y-position the channel can move to safely.
+      channel_speed: Speed of the channel's movement (in mm/sec).
+        Defaults to 10.0 mm/sec (i.e. slow default for safety).
+      channel_acceleration_int: Acceleration level,
+        corresponding to 1-4 (* 5,000 steps/sec²). Defaults to 4.
+      detection_edge: Steepness of the edge for capacitive detection.
+        Must be between 0 and 1024. Defaults to 10.
+      current_limit_int: Current limit level,
+        from 1 to 7. Defaults to 7.
+      post_detection_dist: Distance to move away from the detected
+        material after detection (in mm). Defaults to 2.0 mm.
 
     Returns:
-        float: The detected y-position of the conductive material (in mm).
+      The detected y-position of the conductive material (in mm).
 
     Raises:
-        ValueError:
-            - If the probing direction is invalid.
-            - If the specified start or end positions are outside the safe range.
-            - If no conductive material is detected during the probing process.
+      ValueError:
+        - If the probing direction is invalid.
+        - If the specified start or end positions are outside the safe range.
+        - If no conductive material is detected during the probing process.
     """
 
     assert probing_direction in [
