@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import enum
 import functools
@@ -7591,6 +7590,8 @@ class STAR(HamiltonLiquidHandler):
 
     Args:
       channel_idx: The index of the channel to use for probing. Backmost channel = 0.
+      tip_len: override the tip length (of tip on channel `channel_idx`). Default is the tip length
+        of the tip that was picked up.
       lowest_immers_pos: The lowest immersion position in mm.
       start_pos_lld_search: The start position for z-touch search in mm.
       channel_speed: The speed of channel movement in mm/sec.
@@ -7616,10 +7617,12 @@ class STAR(HamiltonLiquidHandler):
           f"found version '{version}'"
         )
 
-    fitting_depth = 8  # mm, for 10, 50, 300, 1000 ul Hamilton tips
-
     if tip_len is None:
-      tip_len = await self.request_tip_len_on_channel(channel_idx=channel_idx)
+      tip_len = self.head[channel_idx].get_tip().total_tip_length
+
+    # fitting_depth = 8 mm for 10, 50, 300, 1000 ul Hamilton tips
+    fitting_depth = self.head[channel_idx].get_tip().fitting_depth
+
     if start_pos_search is None:
       start_pos_search = 334.7 - tip_len + fitting_depth
 
@@ -7742,14 +7745,33 @@ class STAR(HamiltonLiquidHandler):
       command="RY",
       fmt="ry#### (n)",
     )
-    return {channel_idx: round(y / 10, 2) for channel_idx, y in enumerate(resp["ry"])}
+    y_positions = [round(y / 10, 2) for y in resp["ry"]]
+
+    # sometimes there is (likely) a floating point error and channels are reported to be
+    # less than 9mm apart. (When you set channels using position_channels_in_y_direction,
+    # it will raise an error.) The minimum y is 6mm, so we fix that first (in case that
+    # values is misreported). Then, we traverse the list in reverse and set the min_diff.
+    if y_positions[-1] < 5.8:
+      raise RuntimeError(
+        "Channels are reported to be too close to the front of the machine. "
+        "The known minimum is 6, which will be fixed automatically for 5.8<y<6. "
+        f"Reported values: {y_positions}."
+      )
+    elif 5.8 <= y_positions[-1] < 6:
+      y_positions[-1] = 6.0
+
+    min_diff = 9.0
+    for i in range(len(y_positions) - 2, -1, -1):
+      if y_positions[i] - y_positions[i + 1] < min_diff:
+        y_positions[i] = y_positions[i + 1] + min_diff
+
+    return {channel_idx: y for channel_idx, y in enumerate(y_positions)}
 
   async def position_channels_in_y_direction(self, ys: Dict[int, float]):
-    """position all channels simultaneously in the Y direction. There is a command for this (C0OY),
-    but I couldn't get it to work, so this sends commands to the individual channels instead.
+    """position all channels simultaneously in the Y direction.
 
     Args:
-      ys: A dictionary mapping channel index to the desired Y position in mm.  The channel index is
+      ys: A dictionary mapping channel index to the desired Y position in mm. The channel index is
       0-indexed from the back.
     """
 
@@ -7765,20 +7787,11 @@ class STAR(HamiltonLiquidHandler):
     ):
       raise ValueError("Channels must be at least 9mm apart and in descending order")
 
-    def _channel_y_to_steps(y: float) -> int:
-      # for PX modules
-      mm_per_step = 0.046302083
-      return round(y / mm_per_step)
-
-    await asyncio.gather(
-      *(
-        self.send_command(
-          module=f"P{STAR.channel_id(channel_idx)}",
-          command="YA",
-          ya=f"{_channel_y_to_steps(y):05}",
-        )
-        for channel_idx, y in channel_locations.items()
-      )
+    yp = " ".join([f"{round(y*10):04}" for y in channel_locations.values()])
+    return await self.send_command(
+      module="C0",
+      command="JY",
+      yp=yp,
     )
 
   async def get_channels_z_positions(self) -> Dict[int, float]:
@@ -7869,7 +7882,7 @@ class STAR(HamiltonLiquidHandler):
     # Quick checks before movement.
     assert channel_locations[0] <= 650, "Channel 0 would hit the back of the robot"
     assert (
-      channel_locations[self.num_channels - 1] >= 0
+      channel_locations[self.num_channels - 1] >= 6
     ), "Channel N would hit the front of the robot"
 
     try:
